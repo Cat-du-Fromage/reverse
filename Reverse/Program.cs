@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-
+using Reverse;
 namespace Reverse
 {
     class Program
@@ -27,26 +28,22 @@ namespace Reverse
             var mainsw = Stopwatch.StartNew();
             string result = "";
 
-            //Get array of char
-            var sw = Stopwatch.StartNew();
-            //int LengthToReverse = TextLength(texteToReverse);
             char[] charTextArray = new char[texteToReverse.Length];
 
             for (int i = 0; i < charTextArray.Length; i++)
             {
                 charTextArray[i] = texteToReverse[i];
             }
-            sw.Stop();
-            Console.WriteLine($"for loop : {sw.Elapsed} ms");
             // 00.0000946 ms with LengthToReverse
             // 00.0000035 ms with Length
-
-            var sw2 = Stopwatch.StartNew();
             var charText = texteToReverse.ToCharArray();
-            sw2.Stop();
-            Console.WriteLine($".Net method : {sw2.Elapsed} ms");
+            var z = FindWords(charText);
             // 00.0000004 ms
-       result = new string(ReverseWords(ReverseAllXOR(charTextArray)));
+
+            //ReverseUtils.strLen(texteToReverse);
+            // 00.0000097 ms intern 
+            // 00.0004976 ms extern(function call)
+            result = new string(ReverseWords(ReverseAllXOR(charTextArray)));
             //TODO - write code to reverse the texte
             //First Group -> try to maximize existing .net methods
             //Second Group -> full manually. Do not use existing methods.
@@ -79,7 +76,6 @@ namespace Reverse
         /// <returns></returns>
         static char[] ReverseAllXOR(char[] TextToReverse)
         {
-            var swReverseAllXOR = Stopwatch.StartNew();
             char[] charTextArray = TextToReverse;
             int endArray = charTextArray.Length - 1;
             for (int j = 0; j < endArray; j++, endArray--)
@@ -88,8 +84,6 @@ namespace Reverse
                 charTextArray[endArray] ^= charTextArray[j];
                 charTextArray[j] ^= charTextArray[endArray];
             }
-            swReverseAllXOR.Stop();
-            Console.WriteLine($"ReverseAllXOR : {swReverseAllXOR.Elapsed} ms");
             return charTextArray;
         }
 
@@ -121,14 +115,70 @@ namespace Reverse
             return charWordArray;
         }
 
-        static int TextLength(string textToCount)
+
+        struct WordNode
         {
-            int lengthText = 0;
-            foreach(char c in textToCount)
+            public WordNode(char[] node)
             {
-                lengthText++;
+                wordNode = node;
             }
-            return lengthText;
+            public char[] wordNode;
         }
+
+        static LinkedList<WordNode> FindWords(char[] text)
+        {
+            LinkedList<WordNode> words = new LinkedList<WordNode>();
+            int count = 0;
+            byte startWord = 0;
+            for (byte i = 0; i < (byte)text.Length; i++)
+            {
+                if((text[i] ^ 32) == 0) // missing . and ,
+                {
+                    WordNode wNode = new WordNode();
+                    char[] wordSplit;
+                    wordSplit = new char[i - 1];
+                    if ((text[i+1] ^ 44) == 0 || (text[i + 1] ^ 46) == 0)
+                    {
+                        //Add Words first
+                        for(byte j = 0; j<(i-1); j++)
+                        {
+                            wordSplit[j] = text[startWord + j];
+                        }
+                        wNode.wordNode = wordSplit;
+                        words.AddLast(wNode);
+
+                        //Add " " + "," or "."
+                        WordNode wNodeS = new WordNode();
+                        char[] space = new char[2] { text[i], text[i+1]};
+                        wNodeS.wordNode = space;
+                        words.AddLast(wNodeS);
+                        i++; //go after . or ,
+                        startWord = (byte)(i+1);
+                    }
+                    else
+                    {
+                        wordSplit = new char[i - startWord];
+                        //Add Words first
+                        for (byte j = 0; j < i-1; j++)
+                        {
+                            wordSplit[j] = text[startWord + j];
+                        }
+                        wNode.wordNode = wordSplit;
+                        words.AddLast(wNode);
+                        startWord = (byte)(i+1);
+                    }
+                }
+                
+            }
+            foreach (WordNode n in words)
+            {
+                foreach (char c in n.wordNode)
+                {
+                    Console.WriteLine($"{c}");
+                }
+            }
+            return words;
+        }
+
     }
 }
