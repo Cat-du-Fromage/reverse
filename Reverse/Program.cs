@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Reverse
 {
@@ -23,24 +24,37 @@ namespace Reverse
         /// <returns>Text reversed</returns>
         static string Reverse(string texteToReverse)
         {
+            var mainsw = Stopwatch.StartNew();
             string result = "";
 
             //Get array of char
-            int LengthToReverse = TextLength(texteToReverse);
-            char[] charTextArray = new char[LengthToReverse];
+            var sw = Stopwatch.StartNew();
+            //int LengthToReverse = TextLength(texteToReverse);
+            char[] charTextArray = new char[texteToReverse.Length];
 
-            for (int i = 0; i < LengthToReverse; i++)
+            for (int i = 0; i < charTextArray.Length; i++)
             {
                 charTextArray[i] = texteToReverse[i];
             }
+            sw.Stop();
+            Console.WriteLine($"for loop : {sw.Elapsed} ms");
+            // 00.0000946 ms with LengthToReverse
+            // 00.0000035 ms with Length
 
-            result = new string(ReverseWords(ReverseAllXOR(charTextArray)));
+            var sw2 = Stopwatch.StartNew();
+            var charText = texteToReverse.ToCharArray();
+            sw2.Stop();
+            Console.WriteLine($".Net method : {sw2.Elapsed} ms");
+            // 00.0000004 ms
+       result = new string(ReverseWords(ReverseAllXOR(charTextArray)));
             //TODO - write code to reverse the texte
             //First Group -> try to maximize existing .net methods
             //Second Group -> full manually. Do not use existing methods.
             //Result expected
             //result = ".nécessaire que lentement aussi mais, possible que vite aussi agir faut Il";
-
+            mainsw.Stop();
+            Console.WriteLine($"speed overall : {mainsw.Elapsed} ms");
+            // 00.0015934 ms
             return result;
         }
         /// <summary>
@@ -65,6 +79,7 @@ namespace Reverse
         /// <returns></returns>
         static char[] ReverseAllXOR(char[] TextToReverse)
         {
+            var swReverseAllXOR = Stopwatch.StartNew();
             char[] charTextArray = TextToReverse;
             int endArray = charTextArray.Length - 1;
             for (int j = 0; j < endArray; j++, endArray--)
@@ -73,6 +88,8 @@ namespace Reverse
                 charTextArray[endArray] ^= charTextArray[j];
                 charTextArray[j] ^= charTextArray[endArray];
             }
+            swReverseAllXOR.Stop();
+            Console.WriteLine($"ReverseAllXOR : {swReverseAllXOR.Elapsed} ms");
             return charTextArray;
         }
 
