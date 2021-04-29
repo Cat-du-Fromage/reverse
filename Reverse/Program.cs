@@ -1,11 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Reverse;
 namespace Reverse
 {
     class Program
     {
+        /// <summary>
+        /// 
+        ///                   TextLeng           00.0005385 ms with LengthToReverse
+        ///                   TextLeng  in       00.0000042 ms with LengthToReverse
+        ///                   Length             00.0000035 ms with Length
+        ///                   .ToCharArray()     00.0000004 ms
+        ///                   strlen:            00.0000097 ms intern 
+        ///                   strLen:            00.0004976 ms extern(function call)
+        ///                   Enumerable.Reverse:00.0076088 ms
+        ///                   Array.Reverse     :00.0000129 ms
+        ///                   ReverseXOR        :00.0001081 ms
+        ///                   ReverseXOR in     :00.0000002 ms
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
             string textToReverse = "Il faut agir aussi vite que possible, mais aussi lentement que nécessaire.";
@@ -32,17 +47,19 @@ namespace Reverse
 
             for (int i = 0; i < charTextArray.Length; i++)
             {
-                charTextArray[i] = texteToReverse[i];
-            }
-            // 00.0000946 ms with LengthToReverse
-            // 00.0000035 ms with Length
-            var charText = texteToReverse.ToCharArray();
-            var z = FindWords(charText);
-            // 00.0000004 ms
+                charTextArray[i] = texteToReverse[i];                                                   //                   00.0000946 ms with LengthToReverse
+            }                                                                                           //Length             00.0000035 ms with Length
+            var charText = texteToReverse.ToCharArray();                                                //.ToCharArray()     00.0000004 ms
 
-            //ReverseUtils.strLen(texteToReverse);
-            // 00.0000097 ms intern 
-            // 00.0004976 ms extern(function call)
+
+            var testsw = Stopwatch.StartNew();
+            //var test = Enumerable.Reverse(charText).ToArray();
+            //char[] test = ReverseAllXOR(charText);
+            var test = ReverseUtils.TextLength(texteToReverse);
+            //Array.Reverse(charText, 0, charText.Length);
+            testsw.Stop();
+            Console.WriteLine($"TextLength : {testsw.Elapsed} ms");
+
             result = new string(ReverseWords(ReverseAllXOR(charTextArray)));
             //TODO - write code to reverse the texte
             //First Group -> try to maximize existing .net methods
@@ -76,6 +93,7 @@ namespace Reverse
         /// <returns></returns>
         static char[] ReverseAllXOR(char[] TextToReverse)
         {
+            var sw6 = Stopwatch.StartNew();
             char[] charTextArray = TextToReverse;
             int endArray = charTextArray.Length - 1;
             for (int j = 0; j < endArray; j++, endArray--)
@@ -84,6 +102,8 @@ namespace Reverse
                 charTextArray[endArray] ^= charTextArray[j];
                 charTextArray[j] ^= charTextArray[endArray];
             }
+            sw6.Stop();
+            Console.WriteLine($"ReverseAllXOR intern: {sw6.Elapsed} ms");
             return charTextArray;
         }
 
@@ -115,35 +135,41 @@ namespace Reverse
             return charWordArray;
         }
 
-
+        /*
         struct WordNode
         {
             public WordNode(char[] node)
             {
                 wordNode = node;
+                prev = null;
+                next = null;
             }
+
+            public WordNode prev;
+            public WordNode next;
             public char[] wordNode;
         }
 
-        static LinkedList<WordNode> FindWords(char[] text)
+        static LinkedListNode<WordNode> FindWords(char[] text)
         {
-            LinkedList<WordNode> words = new LinkedList<WordNode>();
+            WordNode wNode;
             int count = 0;
             byte startWord = 0;
             for (byte i = 0; i < (byte)text.Length; i++)
             {
-                if((text[i] ^ 32) == 0) // missing . and ,
+                if((text[i] ^ 32) == 0 || (text[i] ^ 44) == 0 || (text[i] ^ 46) == 0) // missing . and ,
                 {
-                    WordNode wNode = new WordNode();
                     char[] wordSplit;
-                    wordSplit = new char[i - 1];
-                    if ((text[i+1] ^ 44) == 0 || (text[i + 1] ^ 46) == 0)
+                    wordSplit = new char[i];
+
+                    //Add Words first
+                    for (byte j = 0; j < (i - 1); j++)
                     {
-                        //Add Words first
-                        for(byte j = 0; j<(i-1); j++)
-                        {
-                            wordSplit[j] = text[startWord + j];
-                        }
+                        wordSplit[j] = text[startWord + j];
+                    }
+
+                    if ((text[i+1] ^ 32) == 0 || (text[i+1] ^ 44) == 0 || (text[i + 1] ^ 46) == 0)
+                    {
                         wNode.wordNode = wordSplit;
                         words.AddLast(wNode);
 
@@ -153,22 +179,16 @@ namespace Reverse
                         wNodeS.wordNode = space;
                         words.AddLast(wNodeS);
                         i++; //go after . or ,
-                        startWord = (byte)(i+1);
                     }
                     else
                     {
                         wordSplit = new char[i - startWord];
-                        //Add Words first
-                        for (byte j = 0; j < i-1; j++)
-                        {
-                            wordSplit[j] = text[startWord + j];
-                        }
                         wNode.wordNode = wordSplit;
                         words.AddLast(wNode);
-                        startWord = (byte)(i+1);
                     }
+                    startWord = (byte)(i+1);
                 }
-                
+                LinkedListNode<WordNode> words = new LinkedListNode<WordNode>(wNode);
             }
             foreach (WordNode n in words)
             {
@@ -179,6 +199,6 @@ namespace Reverse
             }
             return words;
         }
-
+        */
     }
 }
